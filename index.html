@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextReel — Find What's Worth Watching</title>
+<meta name="description" content="NextReel is a movie discovery platform for finding what's worth watching — browse by genre, see what's trending, and build a watchlist.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Design tokens ---------- */
+  :root{
+    --bg:#0b0d10;
+    --bg-raised:#14161b;
+    --surface:#1b1e24;
+    --surface-hover:#22252c;
+    --border:rgba(237,237,233,0.09);
+    --border-strong:rgba(237,237,233,0.16);
+    --text:#edece6;
+    --text-muted:#9b9d98;
+    --text-faint:#6c6e6a;
+    --brass:#c9a227;
+    --brass-bright:#e0bc4a;
+    --brass-wash:rgba(201,162,39,0.12);
+    --crimson:#9a3f3f;
+    --focus:#e0bc4a;
+    --radius-s:5px;
+    --radius-m:9px;
+    --radius-l:14px;
+    --serif:'Fraunces', Georgia, serif;
+    --sans:'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --maxw:1180px;
+    --shadow-1: 0 1px 0 rgba(0,0,0,0.4);
+    --shadow-2: 0 12px 32px rgba(0,0,0,0.45);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:600;margin:0;color:var(--text);letter-spacing:-0.01em;}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;margin:0;padding:0;}
+  button{font-family:inherit;}
+  img{max-width:100%;display:block;}
+
+  :focus{outline:none;}
+  :focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:2px;}
+
+  .skip-link{
+    position:absolute;left:-9999px;top:0;background:var(--brass);color:#141414;
+    padding:10px 16px;border-radius:0 0 6px 0;z-index:200;font-weight:700;
+  }
+  .skip-link:focus{left:0;}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+  @media(max-width:640px){.wrap{padding:0 18px;}}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 22px;border-radius:var(--radius-s);border:1px solid transparent;
+    font-size:0.94rem;font-weight:600;cursor:pointer;transition:background .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
+    white-space:nowrap;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--brass);color:#171308;}
+  .btn-primary:hover{background:var(--brass-bright);}
+  .btn-outline{background:transparent;color:var(--text);border-color:var(--border-strong);}
+  .btn-outline:hover{border-color:var(--brass);color:var(--brass-bright);}
+  .btn-ghost{background:transparent;color:var(--text-muted);border-color:transparent;padding:12px 14px;}
+  .btn-ghost:hover{color:var(--text);}
+  .btn-danger-ghost{background:transparent;color:#c47a7a;border-color:rgba(196,122,122,0.35);}
+  .btn-danger-ghost:hover{background:rgba(196,122,122,0.1);}
+  .btn-block{width:100%;}
+  .btn[disabled]{opacity:0.5;cursor:not-allowed;}
+
+  /* ---------- Header ---------- */
+  .site-header{
+    position:sticky;top:0;z-index:100;background:rgba(11,13,16,0.92);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+  }
+  .header-row{display:flex;align-items:center;justify-content:space-between;height:72px;gap:24px;}
+  .brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .brand-mark{width:30px;height:30px;flex-shrink:0;}
+  .brand-word{font-family:var(--serif);font-size:1.32rem;font-weight:600;letter-spacing:0.01em;}
+  .brand-word .accent{color:var(--brass);}
+  .main-nav{display:flex;align-items:center;gap:2px;}
+  .main-nav a{
+    padding:10px 14px;border-radius:var(--radius-s);font-size:0.93rem;color:var(--text-muted);
+    font-weight:600;transition:color .15s ease, background .15s ease;position:relative;
+  }
+  .main-nav a:hover{color:var(--text);background:var(--surface);}
+  .main-nav a.active{color:var(--brass-bright);}
+  .nav-badge{
+    display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+    padding:0 5px;margin-left:6px;background:var(--brass);color:#171308;border-radius:99px;
+    font-size:0.68rem;font-weight:800;vertical-align:2px;
+  }
+  .nav-badge:empty{display:none;}
+  .nav-toggle{
+    display:none;background:transparent;border:1px solid var(--border-strong);border-radius:var(--radius-s);
+    width:42px;height:42px;color:var(--text);cursor:pointer;align-items:center;justify-content:center;
+  }
+  .mobile-panel{display:none;}
+
+  @media(max-width:900px){
+    .main-nav{display:none;}
+    .nav-toggle{display:flex;}
+    .mobile-panel{
+      display:block;max-height:0;overflow:hidden;border-bottom:1px solid var(--border);
+      transition:max-height .22s ease;background:var(--bg-raised);
+    }
+    .mobile-panel.open{max-height:420px;}
+    .mobile-panel ul{padding:10px 18px 18px;display:flex;flex-direction:column;gap:2px;}
+    .mobile-panel a{padding:12px 6px;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border);}
+    .mobile-panel a.active{color:var(--brass-bright);}
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{padding:64px 0 76px;position:relative;overflow:hidden;}
+  .hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:56px;align-items:center;}
+  @media(max-width:940px){.hero-grid{grid-template-columns:1fr;gap:40px;}}
+  .eyebrow{font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;font-style:italic;font-family:var(--serif);}
+  .hero h1{font-size:clamp(2.4rem,5vw,3.6rem);line-height:1.05;max-width:15ch;}
+  .hero-lede{margin-top:20px;color:var(--text-muted);max-width:44ch;font-size:1.05rem;}
+  .search-form{
+    margin-top:32px;display:flex;gap:10px;max-width:520px;background:var(--surface);
+    border:1px solid var(--border-strong);border-radius:var(--radius-m);padding:6px;
+  }
+  .search-form input{
+    flex:1;background:transparent;border:0;color:var(--text);font-size:0.98rem;padding:12px 14px;font-family:var(--sans);
+  }
+  .search-form input::placeholder{color:var(--text-faint);}
+  .search-form input:focus-visible{outline:none;}
+  .search-form:focus-within{border-color:var(--brass);}
+  .hero-meta{margin-top:18px;display:flex;gap:22px;color:var(--text-faint);font-size:0.85rem;flex-wrap:wrap;}
+  .hero-meta strong{color:var(--text);font-family:var(--serif);font-size:1.05rem;font-weight:600;display:block;}
+
+  .poster-collage{position:relative;height:380px;}
+  .poster-collage .poster{position:absolute;box-shadow:var(--shadow-2);}
+  @media(max-width:940px){.poster-collage{height:300px;}}
+  @media(max-width:520px){.poster-collage{display:none;}}
+
+  /* ---------- Section scaffolding ---------- */
+  .section{padding:58px 0;}
+  .section-tight{padding:40px 0;}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:18px;margin-bottom:26px;flex-wrap:wrap;}
+  .section-head h2{font-size:clamp(1.5rem,2.6vw,1.9rem);}
+  .section-head .see-all{font-size:0.88rem;font-weight:700;color:var(--brass);white-space:nowrap;}
+  .section-head .see-all:hover{color:var(--brass-bright);}
+  .section-sub{color:var(--text-muted);font-size:0.95rem;margin-top:6px;max-width:56ch;}
+  hr.rule{border:0;border-top:1px solid var(--border);margin:0;}
+
+  /* ---------- Poster art (generated) ---------- */
+  .poster{
+    position:relative;border-radius:var(--radius-m);overflow:hidden;background:#14161b;
+    border:1px solid var(--border);
+  }
+  .poster-inner{
+    position:relative;width:100%;height:100%;display:flex;align-items:flex-end;padding:14px;
+    background:
+      linear-gradient(160deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.55) 100%),
+      var(--pgrad);
+  }
+  .poster-inner::before{
+    content:"";position:absolute;inset:0;
+    background-image:repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 5px);
+    mix-blend-mode:overlay;
+  }
+  .poster-title{
+    position:relative;z-index:1;color:#f2ede0;font-family:var(--serif);font-weight:600;
+    font-size:clamp(0.85rem,1.6vw,1.05rem);line-height:1.2;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .poster-monogram{
+    position:absolute;top:10px;left:10px;font-family:var(--serif);font-size:0.65rem;letter-spacing:0.1em;
+    color:rgba(242,237,224,0.55);border:1px solid rgba(242,237,224,0.3);border-radius:99px;
+    padding:2px 7px;
+  }
+  .poster-badge{
+    position:absolute;top:10px;right:10px;background:rgba(11,13,16,0.72);color:var(--brass-bright);
+    font-weight:800;font-size:0.78rem;padding:3px 7px;border-radius:5px;z-index:2;
+    border:1px solid rgba(201,162,39,0.4);
+  }
+  .poster-rank{
+    position:absolute;bottom:10px;right:12px;font-family:var(--serif);font-size:2rem;font-weight:600;
+    color:rgba(242,237,224,0.85);z-index:1;
+  }
+
+  /* ---------- Movie cards ---------- */
+  .card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  @media(max-width:980px){.card-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:700px){.card-grid{grid-template-columns:repeat(2,1fr);gap:16px;}}
+  @media(max-width:420px){.card-grid{grid-template-columns:1fr 1fr;gap:12px;}}
+
+  .movie-card{display:flex;flex-direction:column;gap:10px;}
+  .movie-card .poster{aspect-ratio:2/3;transition:transform .18s ease, border-color .18s ease;}
+  .movie-card:hover .poster{transform:translateY(-4px);border-color:var(--border-strong);}
+  .movie-card-title{font-family:var(--serif);font-weight:600;font-size:1rem;color:var(--text);}
+  .movie-card-meta{font-size:0.82rem;color:var(--text-faint);display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .movie-card-cta{
+    margin-top:2px;font-size:0.82rem;font-weight:700;color:var(--brass);align-self:flex-start;
+  }
+  .movie-card-cta:hover{color:var(--brass-bright);}
+  .card-link{display:flex;flex-direction:column;gap:10px;}
+
+  .rank-row{display:flex;gap:20px;overflow-x:auto;padding-bottom:10px;scrollbar-width:thin;}
+  .rank-row::-webkit-scrollbar{height:8px;}
+  .rank-row::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:99px;}
+  .rank-item{flex:0 0 190px;}
+  .rank-item .poster{aspect-ratio:2/3;}
+
+  /* ---------- Genre grid ---------- */
+  .genre-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  @media(max-width:820px){.genre-grid{grid-template-columns:repeat(2,1fr);}}
+  .genre-tile{
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:26px 20px;
+    background:linear-gradient(160deg, var(--gwash) 0%, transparent 65%), var(--surface);
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .genre-tile:hover{border-color:var(--border-strong);transform:translateY(-2px);}
+  .genre-tile h3{font-size:1.15rem;margin-bottom:6px;}
+  .genre-tile p{color:var(--text-faint);font-size:0.85rem;}
+
+  /* ---------- Featured banner ---------- */
+  .featured{
+    display:grid;grid-template-columns:280px 1fr;gap:36px;background:var(--bg-raised);
+    border:1px solid var(--border);border-radius:var(--radius-l);padding:28px;align-items:center;
+  }
+  @media(max-width:760px){.featured{grid-template-columns:1fr;}}
+  .featured .poster{aspect-ratio:2/3;width:100%;}
+  .featured-tag{
+    display:inline-block;font-family:var(--serif);font-style:italic;color:var(--brass-bright);
+    font-size:0.92rem;margin-bottom:10px;
+  }
+  .featured h3{font-size:clamp(1.5rem,3vw,2.1rem);margin-bottom:12px;}
+  .featured-meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--text-faint);font-size:0.86rem;margin-bottom:16px;}
+  .featured-syn{color:var(--text-muted);max-width:62ch;margin-bottom:22px;}
+  .featured-actions{display:flex;gap:12px;flex-wrap:wrap;}
+
+  /* ---------- Rating pill ---------- */
+  .rating-pill{
+    display:inline-flex;align-items:center;gap:5px;font-weight:800;color:var(--brass-bright);
+    font-size:0.86rem;
+  }
+  .rating-pill svg{width:13px;height:13px;fill:var(--brass-bright);}
+
+  /* ---------- CTA band ---------- */
+  .cta-band{
+    background:linear-gradient(120deg, var(--bg-raised), var(--surface));
+    border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+    padding:64px 0;text-align:center;
+  }
+  .cta-band h2{font-size:clamp(1.7rem,3.6vw,2.4rem);max-width:20ch;margin:0 auto 14px;}
+  .cta-band p{color:var(--text-muted);max-width:48ch;margin:0 auto 28px;}
+
+  /* ---------- Filters bar ---------- */
+  .filters-bar{
+    display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:30px;
+    padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);
+  }
+  .filters-bar .search-form{margin:0;flex:1;min-width:220px;max-width:none;}
+  .field-select{position:relative;}
+  select{
+    background:var(--bg-raised);color:var(--text);border:1px solid var(--border-strong);
+    border-radius:var(--radius-s);padding:11px 32px 11px 14px;font-family:var(--sans);font-size:0.9rem;
+    appearance:none;cursor:pointer;
+  }
+  select:hover{border-color:var(--brass);}
+  .field-select::after{
+    content:"";position:absolute;right:12px;top:50%;width:8px;height:8px;
+    border-right:2px solid var(--text-faint);border-bottom:2px solid var(--text-faint);
+    transform:translateY(-65%) rotate(45deg);pointer-events:none;
+  }
+  .results-count{color:var(--text-faint);font-size:0.86rem;margin:-14px 0 22px;}
+
+  /* ---------- Genre pills (genres landing sub-nav on movies page) ---------- */
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;}
+  .pill{
+    padding:8px 14px;border-radius:99px;border:1px solid var(--border-strong);
+    font-size:0.84rem;font-weight:600;color:var(--text-muted);cursor:pointer;background:transparent;
+  }
+  .pill:hover{border-color:var(--brass);color:var(--text);}
+  .pill.active{background:var(--brass);border-color:var(--brass);color:#171308;}
+
+  /* ---------- Empty / loading states ---------- */
+  .empty-state{
+    text-align:center;padding:70px 20px;border:1px dashed var(--border-strong);border-radius:var(--radius-l);
+    color:var(--text-muted);
+  }
+  .empty-state h3{font-size:1.3rem;margin-bottom:10px;color:var(--text);}
+  .empty-state p{max-width:42ch;margin:0 auto 20px;}
+  .skeleton-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  @media(max-width:980px){.skeleton-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:700px){.skeleton-grid{grid-template-columns:repeat(2,1fr);}}
+  .skeleton-card{display:flex;flex-direction:column;gap:10px;}
+  .skeleton-poster{aspect-ratio:2/3;border-radius:var(--radius-m);background:var(--surface);position:relative;overflow:hidden;}
+  .skeleton-line{height:11px;border-radius:4px;background:var(--surface);width:70%;}
+  .skeleton-line.short{width:40%;}
+  .skeleton-poster::after, .skeleton-line::after{
+    content:"";position:absolute;inset:0;transform:translateX(-100%);
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    animation:shimmer 1.3s infinite;
+  }
+  .skeleton-line{position:relative;overflow:hidden;}
+  @keyframes shimmer{100%{transform:translateX(100%);}}
+
+  /* ---------- Movie detail ---------- */
+  .detail-back{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-size:0.88rem;font-weight:600;margin-bottom:26px;}
+  .detail-back:hover{color:var(--brass);}
+  .detail-grid{display:grid;grid-template-columns:320px 1fr;gap:44px;}
+  @media(max-width:820px){.detail-grid{grid-template-columns:1fr;}}
+  .detail-grid .poster{aspect-ratio:2/3;width:100%;}
+  .detail-tags{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px;}
+  .tag{
+    font-size:0.78rem;font-weight:700;color:var(--text-muted);border:1px solid var(--border-strong);
+    border-radius:99px;padding:5px 12px;
+  }
+  .detail-title{font-size:clamp(1.9rem,4vw,2.6rem);margin-bottom:10px;}
+  .detail-meta-row{display:flex;gap:18px;flex-wrap:wrap;align-items:center;color:var(--text-faint);font-size:0.9rem;margin-bottom:22px;}
+  .detail-syn{color:var(--text-muted);max-width:68ch;font-size:1.02rem;margin-bottom:24px;}
+  .detail-cast{margin-bottom:28px;}
+  .detail-cast h4{font-size:0.98rem;margin-bottom:10px;color:var(--text);}
+  .detail-cast p{color:var(--text-muted);font-size:0.93rem;}
+  .detail-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px;}
+  .demo-note{
+    font-size:0.83rem;color:var(--text-faint);border-left:2px solid var(--brass);padding-left:14px;
+    max-width:56ch;font-style:italic;
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(6,7,9,0.72);display:flex;align-items:center;justify-content:center;
+    z-index:300;padding:20px;
+  }
+  .modal-box{
+    background:var(--bg-raised);border:1px solid var(--border-strong);border-radius:var(--radius-l);
+    max-width:420px;width:100%;padding:30px;box-shadow:var(--shadow-2);
+  }
+  .modal-box h3{font-size:1.25rem;margin-bottom:12px;}
+  .modal-box p{color:var(--text-muted);margin-bottom:22px;font-size:0.95rem;}
+
+  /* ---------- Forms (contact) ---------- */
+  .form-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-l);
+    padding:34px;max-width:600px;
+  }
+  .field{margin-bottom:20px;}
+  .field label{display:block;font-size:0.87rem;font-weight:700;margin-bottom:8px;color:var(--text);}
+  .field .optional{color:var(--text-faint);font-weight:500;font-style:italic;}
+  .field input, .field textarea{
+    width:100%;background:var(--bg-raised);border:1px solid var(--border-strong);border-radius:var(--radius-s);
+    color:var(--text);padding:12px 14px;font-family:var(--sans);font-size:0.95rem;
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--brass);}
+  .field textarea{resize:vertical;min-height:100px;}
+  .field-error{color:#d38b8b;font-size:0.82rem;margin-top:6px;display:none;}
+  .field.invalid input, .field.invalid textarea{border-color:#a15353;}
+  .field.invalid .field-error{display:block;}
+  .form-success{
+    text-align:center;padding:40px 10px;
+  }
+  .form-success h3{font-size:1.4rem;margin-bottom:10px;}
+  .form-success p{color:var(--text-muted);max-width:44ch;margin:0 auto 22px;}
+
+  /* ---------- Watchlist ---------- */
+  .watchlist-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;margin-bottom:30px;}
+  .watchlist-remove{
+    margin-top:6px;font-size:0.82rem;font-weight:700;color:#c47a7a;align-self:flex-start;background:none;border:0;cursor:pointer;padding:0;
+  }
+  .watchlist-remove:hover{color:#e09b9b;}
+
+  /* ---------- Footer ---------- */
+  .site-footer{border-top:1px solid var(--border);padding:56px 0 32px;margin-top:40px;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:36px;margin-bottom:40px;}
+  @media(max-width:800px){.footer-grid{grid-template-columns:1fr 1fr;}}
+  @media(max-width:480px){.footer-grid{grid-template-columns:1fr;}}
+  .footer-grid h4{font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;font-weight:700;}
+  .footer-grid li{margin-bottom:10px;}
+  .footer-grid a{color:var(--text-muted);font-size:0.9rem;}
+  .footer-grid a:hover{color:var(--brass-bright);}
+  .footer-about p{color:var(--text-faint);font-size:0.88rem;max-width:36ch;margin-top:12px;}
+  .footer-bottom{
+    border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;color:var(--text-faint);font-size:0.82rem;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
+  }
+
+  .visually-hidden{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#app">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="#/home" aria-label="NextReel home">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="16" cy="16" r="14" stroke="#c9a227" stroke-width="2"/>
+        <circle cx="16" cy="16" r="3.4" fill="#c9a227"/>
+        <circle cx="16" cy="7" r="2.1" fill="#c9a227"/>
+        <circle cx="24" cy="20.5" r="2.1" fill="#c9a227"/>
+        <circle cx="8" cy="20.5" r="2.1" fill="#c9a227"/>
+      </svg>
+      <span class="brand-word">NEXT<span class="accent">REEL</span></span>
+    </a>
+    <nav class="main-nav" id="mainNav" aria-label="Primary">
+      <a href="#/home" data-route="home">Home</a>
+      <a href="#/movies" data-route="movies">Movies</a>
+      <a href="#/trending" data-route="trending">Trending</a>
+      <a href="#/top-rated" data-route="top-rated">Top Rated</a>
+      <a href="#/genres" data-route="genres">Genres</a>
+      <a href="#/watchlist" data-route="watchlist">Watchlist<span class="nav-badge" id="navBadge"></span></a>
+      <a href="#/contact" data-route="contact">Recommend</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobilePanel" aria-label="Toggle menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M2 5h16M2 10h16M2 15h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="mobile-panel" id="mobilePanel">
+    <ul id="mobileNavList" aria-label="Primary mobile">
+      <li><a href="#/home" data-route="home">Home</a></li>
+      <li><a href="#/movies" data-route="movies">Movies</a></li>
+      <li><a href="#/trending" data-route="trending">Trending</a></li>
+      <li><a href="#/top-rated" data-route="top-rated">Top Rated</a></li>
+      <li><a href="#/genres" data-route="genres">Genres</a></li>
+      <li><a href="#/watchlist" data-route="watchlist">Watchlist</a></li>
+      <li><a href="#/contact" data-route="contact">Recommend a Movie</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-about">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="16" cy="16" r="14" stroke="#c9a227" stroke-width="2"/>
+            <circle cx="16" cy="16" r="3.4" fill="#c9a227"/>
+            <circle cx="16" cy="7" r="2.1" fill="#c9a227"/>
+            <circle cx="24" cy="20.5" r="2.1" fill="#c9a227"/>
+            <circle cx="8" cy="20.5" r="2.1" fill="#c9a227"/>
+          </svg>
+          <span class="brand-word">NEXT<span class="accent">REEL</span></span>
+        </div>
+        <p>A student project built to explore movie discovery and web marketing. Sample catalogue, not a live commercial service.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="#/movies">Movies</a></li>
+          <li><a href="#/trending">Trending</a></li>
+          <li><a href="#/top-rated">Top Rated</a></li>
+          <li><a href="#/genres">Genres</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Your account</h4>
+        <ul>
+          <li><a href="#/watchlist">Watchlist</a></li>
+          <li><a href="#/contact">Recommend a movie</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>About this project</h4>
+        <ul>
+          <li><a href="#/home">Project overview</a></li>
+          <li>Ratings and reviews shown are sample data</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 NextReel. University coursework demo — not a real business.</span>
+      <span>Made with an original design system.</span>
+    </div>
+  </div>
+</footer>
+
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =====================================================================
+   ANALYTICS EVENT LAYER
+   -------------------------------------------------------------------
+   This does NOT load Google Analytics or Google Tag Manager. It only
+   pushes structured events onto window.dataLayer, which is the
+   standard hand-off point GTM reads from. Once a GTM container (and
+   GA4 tag) is added later, each event below can be turned into a
+   trigger -> tag -> GA4 "key event" (goal) without touching this code
+   again. Until GTM/GA is added, these pushes are inert no-ops.
+===================================================================== */
+window.dataLayer = window.dataLayer || [];
+function trackEvent(name, params){
+  window.dataLayer.push(Object.assign({event: name}, params || {}));
+}
+
+/* =====================================================================
+   DATA
+   All titles, ratings and synopses below are SAMPLE DATA for a student
+   prototype. Real film titles are used with original, non-quoted
+   synopsis text; ratings are demo values, not live scores from any
+   real-world source.
+===================================================================== */
+
+var GENRES = ["Action","Comedy","Drama","Horror","Thriller","Sci-Fi","Romance","Animation"];
+
+var GENRE_INFO = {
+  "Action":   {desc:"High-stakes chases, stunts and stories built for momentum."},
+  "Comedy":   {desc:"Sharp scripts and lighter stories for an easy watch."},
+  "Drama":    {desc:"Character-driven stories with real emotional weight."},
+  "Horror":   {desc:"Tension, dread and the occasional scream."},
+  "Thriller": {desc:"Twists, stakes and stories that keep you guessing."},
+  "Sci-Fi":   {desc:"Big ideas, future worlds and speculative what-ifs."},
+  "Romance":  {desc:"Stories about connection, timing and getting it right."},
+  "Animation":{desc:"Handcrafted and rendered worlds for every age."}
+};
+
+var MOVIES = [
+  {id:"inception", title:"Inception", year:2010, genres:["Sci-Fi","Thriller"], rating:8.8, runtime:148,
+   synopsis:"A thief who steals secrets from inside people's dreams is offered a chance at redemption if he can plant an idea instead of stealing one.",
+   cast:["Leonardo DiCaprio","Elliot Page","Tom Hardy","Ken Watanabe"], real:true, trendRank:1},
+  {id:"the-dark-knight", title:"The Dark Knight", year:2008, genres:["Action","Thriller"], rating:9.0, runtime:152,
+   synopsis:"A vigilante's fight against organised crime escalates when a chaos-driven mastermind pushes the city to its breaking point.",
+   cast:["Christian Bale","Heath Ledger","Aaron Eckhart"], real:true, trendRank:2},
+  {id:"parasite", title:"Parasite", year:2019, genres:["Drama","Thriller"], rating:8.6, runtime:132,
+   synopsis:"A struggling family's scheme to infiltrate a wealthy household unravels into something far stranger than they planned.",
+   cast:["Song Kang-ho","Lee Sun-kyun","Cho Yeo-jeong"], real:true},
+  {id:"la-la-land", title:"La La Land", year:2016, genres:["Romance","Drama"], rating:8.0, runtime:128,
+   synopsis:"A pianist and an actress fall for each other in Los Angeles while chasing careers that keep pulling them in different directions.",
+   cast:["Ryan Gosling","Emma Stone"], real:true},
+  {id:"the-godfather", title:"The Godfather", year:1972, genres:["Drama"], rating:9.2, runtime:175,
+   synopsis:"The youngest son of a powerful crime family is drawn deeper into the business he swore he'd never join.",
+   cast:["Marlon Brando","Al Pacino","James Caan"], real:true},
+  {id:"get-out", title:"Get Out", year:2017, genres:["Horror","Thriller"], rating:7.7, runtime:104,
+   synopsis:"A weekend trip to meet his girlfriend's family takes an increasingly unsettling turn for a young photographer.",
+   cast:["Daniel Kaluuya","Allison Williams","Catherine Keener"], real:true, trendRank:4},
+  {id:"interstellar", title:"Interstellar", year:2014, genres:["Sci-Fi","Drama"], rating:8.7, runtime:169,
+   synopsis:"A former pilot leads a mission through a wormhole in search of a new home for humanity as Earth runs out of time.",
+   cast:["Matthew McConaughey","Anne Hathaway","Jessica Chastain"], real:true, trendRank:3, featured:true},
+  {id:"spirited-away", title:"Spirited Away", year:2001, genres:["Animation","Drama"], rating:8.6, runtime:125,
+   synopsis:"A young girl finds herself trapped in a spirit world and must work in a bathhouse to save her parents and find her way home.",
+   cast:["Rumi Hiiragi","Miyu Irino"], real:true},
+  {id:"whiplash", title:"Whiplash", year:2014, genres:["Drama"], rating:8.5, runtime:106,
+   synopsis:"A young drummer's ambition collides with the brutal standards of an instructor determined to push him past his limits.",
+   cast:["Miles Teller","J.K. Simmons"], real:true},
+  {id:"grand-budapest-hotel", title:"The Grand Budapest Hotel", year:2014, genres:["Comedy","Drama"], rating:8.1, runtime:99,
+   synopsis:"A legendary concierge and his loyal lobby boy get tangled in a theft, an inheritance and the collapse of an era.",
+   cast:["Ralph Fiennes","Tony Revolori"], real:true},
+
+  {id:"iron-horizon", title:"Iron Horizon", year:2023, genres:["Action","Sci-Fi"], rating:7.2, runtime:118,
+   synopsis:"A disgraced pilot is pulled back into service when a rogue satellite network threatens to ground every aircraft on Earth.",
+   cast:["Marisol Vane","Theo Bracken","Diallo Sesay"], trendRank:5},
+  {id:"crimson-protocol", title:"Crimson Protocol", year:2021, genres:["Action","Thriller"], rating:6.8, runtime:109,
+   synopsis:"An ex-operative is dragged back into a world she left behind when her old handler resurfaces with a list of names, including hers.",
+   cast:["Nadia Okoro","Simon Prek"]},
+  {id:"vanguard-nine", title:"Vanguard Nine", year:2022, genres:["Action"], rating:7.0, runtime:121,
+   synopsis:"A disbanded strike team reunites for one last job when the client turns out to be the man they were trained to hunt.",
+   cast:["Cole Marsh","Priya Anand"]},
+
+  {id:"wedding-disaster", title:"The Wedding Disaster", year:2019, genres:["Comedy"], rating:6.5, runtime:97,
+   synopsis:"Two feuding wedding planners are forced to co-run the same event after a booking mix-up neither of them will admit to.",
+   cast:["Harriet Lowe","Devon Ashworth"]},
+  {id:"office-hours", title:"Office Hours", year:2020, genres:["Comedy"], rating:6.9, runtime:92,
+   synopsis:"A hopeless intern accidentally becomes the office's most trusted advisor, one terrible piece of advice at a time.",
+   cast:["Callum Reyes","Mei Tanaka"]},
+  {id:"two-left-feet", title:"Two Left Feet", year:2018, genres:["Comedy","Romance"], rating:6.6, runtime:101,
+   synopsis:"A reluctant dance-competition partnership turns into something neither contestant expected to be dancing toward.",
+   cast:["Anouk Ferreira","Jamie Holt"]},
+
+  {id:"quiet-harbor", title:"Quiet Harbor", year:2022, genres:["Drama"], rating:7.6, runtime:114,
+   synopsis:"A fisherman returning to his hometown after a decade away has to reckon with the family he left and the harbor that never forgot him.",
+   cast:["Elin Torvald","Marcus Idehen"]},
+  {id:"cartographers-daughter", title:"The Cartographer's Daughter", year:2020, genres:["Drama"], rating:7.4, runtime:122,
+   synopsis:"Inheriting her late father's unfinished maps, a young woman retraces his final expedition to understand what he was really searching for.",
+   cast:["Ines Calder","Tomas Reyk"]},
+  {id:"ashfall", title:"Ashfall", year:2021, genres:["Drama","Thriller"], rating:7.1, runtime:108,
+   synopsis:"A volcanic evacuation forces two estranged sisters to share a car, a border crossing, and everything they never said to each other.",
+   cast:["Bianca Solis","Rowan Blake"]},
+
+  {id:"hollow-meridian", title:"Hollow Meridian", year:2023, genres:["Horror"], rating:7.3, runtime:99,
+   synopsis:"A research team studying a silent radio signal in the Arctic starts to realise the signal is answering back.",
+   cast:["Freya Nilsson","Aaron Okafor"], trendRank:6},
+  {id:"nightkeeper", title:"The Nightkeeper", year:2021, genres:["Horror","Thriller"], rating:6.7, runtime:95,
+   synopsis:"A new night-shift caretaker at a shuttered hospital learns why the building was never actually closed for good.",
+   cast:["Lucia Marchetti","Ben Osei"]},
+  {id:"static", title:"Static", year:2019, genres:["Horror"], rating:6.4, runtime:88,
+   synopsis:"A family's new smart-home system starts learning habits it was never taught, and the house stops feeling like theirs.",
+   cast:["Grace Villanueva","Peter Lindqvist"]},
+
+  {id:"last-ledger", title:"The Last Ledger", year:2022, genres:["Thriller"], rating:7.5, runtime:116,
+   synopsis:"An auditor uncovers a decades-old fraud one signature at a time, unaware that the trail leads straight back to her own firm.",
+   cast:["Naomi Whitfield","Idris Bakare"], trendRank:8},
+  {id:"blackout-city", title:"Blackout City", year:2020, genres:["Thriller","Action"], rating:7.2, runtime:110,
+   synopsis:"When a city-wide blackout hits on election night, a beat reporter has twelve hours to prove the outage wasn't an accident.",
+   cast:["Selin Aydin","Marcus Reyes"]},
+  {id:"nine-days-to-vega", title:"Nine Days to Vega", year:2018, genres:["Thriller"], rating:6.9, runtime:103,
+   synopsis:"A courier with nine days to deliver a package she was never told the contents of starts to suspect she's the real cargo.",
+   cast:["Odette Kim","Victor Lund"]},
+
+  {id:"echo-protocol", title:"Echo Protocol", year:2023, genres:["Sci-Fi","Thriller"], rating:7.8, runtime:124,
+   synopsis:"A memory-repair technician discovers a client's implanted memories don't belong to any life on record.",
+   cast:["Ines Calder","Desmond Pryce"], trendRank:7},
+  {id:"last-signal", title:"The Last Signal", year:2021, genres:["Sci-Fi","Drama"], rating:7.4, runtime:119,
+   synopsis:"The final crew aboard a decommissioned space station must decide who gets the only seat home when rescue arrives early.",
+   cast:["Talia Novak","Emeka Chukwu"]},
+  {id:"aurora-drift", title:"Aurora Drift", year:2022, genres:["Sci-Fi"], rating:7.6, runtime:131,
+   synopsis:"A generation ship drifting off its planned course finds a habitable world centuries ahead of schedule, and no one agrees on what to do.",
+   cast:["Sofia Marek","Dante Osei"]},
+
+  {id:"letters-from-capri", title:"Letters from Capri", year:2019, genres:["Romance","Drama"], rating:7.0, runtime:105,
+   synopsis:"A translator hired to sort a late poet's letters finds herself falling for the man who's been answering them for years.",
+   cast:["Chiara Bellini","Malik Fontaine"]},
+  {id:"long-way-to-lisbon", title:"The Long Way to Lisbon", year:2021, genres:["Romance"], rating:6.8, runtime:98,
+   synopsis:"Two strangers sharing the last seats on a delayed train talk their way from polite small talk to something neither wants to end.",
+   cast:["Noor Haddad","Julien Castel"]},
+  {id:"autumn-in-prague", title:"Autumn in Prague", year:2018, genres:["Romance","Drama"], rating:7.3, runtime:112,
+   synopsis:"A violin restorer and a touring conductor keep crossing paths across one city, one season, and one instrument neither will give up.",
+   cast:["Klara Novakova","Andres Petrov"]},
+
+  {id:"tin-forest", title:"The Tin Forest", year:2022, genres:["Animation"], rating:7.7, runtime:96,
+   synopsis:"A junkyard robot builds a forest out of scrap metal to bring color back to a world that's forgotten what green looks like.",
+   cast:["Voice cast: Priya Anand","Tobias Lund"]},
+  {id:"moonlit-harbor", title:"Moonlit Harbor", year:2020, genres:["Animation","Drama"], rating:7.5, runtime:89,
+   synopsis:"A lighthouse keeper's daughter befriends a creature from the deep that only surfaces on the night of a full moon.",
+   cast:["Voice cast: Elin Torvald","Marcus Idehen"]},
+  {id:"paper-lanterns", title:"Paper Lanterns", year:2019, genres:["Animation","Romance"], rating:7.1, runtime:93,
+   synopsis:"Two rival lantern-makers competing for the same festival prize discover their designs work best side by side.",
+   cast:["Voice cast: Mei Tanaka","Callum Reyes"]}
+];
+
+var PALETTES = [
+  ["#3a2f14","#0b0d10"], ["#3a1e1e","#0b0d10"], ["#1e2f2b","#0b0d10"],
+  ["#2c2414","#0b0d10"], ["#241e33","#0b0d10"], ["#2a1f13","#0b0d10"],
+  ["#182a30","#0b0d10"], ["#33241c","#0b0d10"]
+];
+
+var byId = {};
+MOVIES.forEach(function(m, i){ m._palette = i % PALETTES.length; byId[m.id] = m; });
+
+/* =====================================================================
+   STATE + STORAGE
+===================================================================== */
+var WL_KEY = "nextreel_watchlist_v1";
+
+function getWatchlist(){
+  try{
+    var raw = window.localStorage.getItem(WL_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function setWatchlist(list){
+  try{ window.localStorage.setItem(WL_KEY, JSON.stringify(list)); }catch(e){}
+  updateNavBadge();
+}
+function isInWatchlist(id){ return getWatchlist().indexOf(id) !== -1; }
+function toggleWatchlist(id){
+  var list = getWatchlist();
+  var idx = list.indexOf(id);
+  var movie = byId[id];
+  if(idx === -1){
+    list.push(id);
+    trackEvent("add_to_watchlist", {movie_id:id, movie_title: movie ? movie.title : id});
+  } else {
+    list.splice(idx,1);
+    trackEvent("remove_from_watchlist", {movie_id:id, movie_title: movie ? movie.title : id});
+  }
+  setWatchlist(list);
+}
+function updateNavBadge(){
+  var n = getWatchlist().length;
+  var badge = document.getElementById("navBadge");
+  badge.textContent = n > 0 ? String(n) : "";
+}
+
+/* =====================================================================
+   HELPERS
+===================================================================== */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, function(c){
+    return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
+  });
+}
+function formatRuntime(min){
+  var h = Math.floor(min/60), m = min%60;
+  return h + "h " + (m<10?"0":"") + m + "m";
+}
+function initials(title){
+  var words = title.replace(/^The\s+/i,"").split(/\s+/).filter(Boolean);
+  return (words[0] ? words[0][0] : "N") + (words[1] ? words[1][0] : "R");
+}
+function posterHTML(movie, opts){
+  opts = opts || {};
+  var pal = PALETTES[movie._palette];
+  var style = "--pgrad:linear-gradient(150deg,"+pal[0]+" 0%,"+pal[1]+" 100%)";
+  var badge = opts.showRating !== false
+    ? '<span class="poster-badge">'+movie.rating.toFixed(1)+'</span>' : "";
+  var rank = opts.rank ? '<span class="poster-rank">'+opts.rank+'</span>' : "";
+  return (
+    '<div class="poster" style="'+style+'" role="img" aria-label="'+escapeHtml(movie.title)+' poster art (sample artwork)">'+
+      '<div class="poster-inner">'+
+        '<span class="poster-monogram">'+initials(movie.title)+'</span>'+
+        badge + rank +
+        '<span class="poster-title">'+escapeHtml(movie.title)+'</span>'+
+      '</div>'+
+    '</div>'
+  );
+}
+function movieCardHTML(movie, opts){
+  opts = opts || {};
+  return (
+    '<a class="movie-card card-link" href="#/movie/'+movie.id+'">'+
+      posterHTML(movie, opts)+
+      '<div>'+
+        '<div class="movie-card-title">'+escapeHtml(movie.title)+'</div>'+
+        '<div class="movie-card-meta">'+
+          '<span>'+movie.year+'</span><span>&middot;</span>'+
+          '<span>'+escapeHtml(movie.genres[0])+'</span><span>&middot;</span>'+
+          '<span class="rating-pill">'+ratingIcon()+movie.rating.toFixed(1)+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<span class="movie-card-cta">View details</span>'+
+    '</a>'
+  );
+}
+function ratingIcon(){
+  return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L1.3 7.8l6.1-.7z"/></svg>';
+}
+function skeletonGrid(n){
+  var html = '<div class="skeleton-grid" aria-hidden="true">';
+  for(var i=0;i<n;i++){
+    html += '<div class="skeleton-card"><div class="skeleton-poster"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>';
+  }
+  html += '</div>';
+  return html;
+}
+function withLoading(container, renderFn, delay){
+  container.innerHTML = skeletonGrid(8) + '<span class="visually-hidden" role="status">Loading movies…</span>';
+  window.setTimeout(function(){
+    container.innerHTML = renderFn();
+  }, delay || 220);
+}
+
+/* =====================================================================
+   ROUTER
+===================================================================== */
+var app = document.getElementById("app");
+
+function parseHash(){
+  var h = window.location.hash.replace(/^#\/?/, "");
+  var pathOnly = h.split("?")[0];
+  var parts = pathOnly.split("/").filter(Boolean);
+  return { route: parts[0] || "home", params: parts.slice(1) };
+}
+
+var ROUTES = {
+  home: renderHome,
+  movies: renderMovies,
+  trending: renderTrending,
+  "top-rated": renderTopRated,
+  genres: renderGenres,
+  genre: renderGenreDetail,
+  movie: renderMovieDetail,
+  watchlist: renderWatchlist,
+  contact: renderContact
+};
+
+function pageTitleFor(route, params){
+  switch(route){
+    case "home": return "Find What's Worth Watching";
+    case "movies": return "Movies";
+    case "trending": return "Trending Now";
+    case "top-rated": return "Top Rated";
+    case "genres": return "Genres";
+    case "genre":
+      var g = decodeURIComponent(params[0] || "");
+      return (GENRES.indexOf(g) !== -1 ? g : "Genre") + " Movies";
+    case "movie":
+      var m = byId[params[0]];
+      return m ? m.title : "Movie Not Found";
+    case "watchlist": return "Your Watchlist";
+    case "contact": return "Recommend a Movie";
+    default: return "Page Not Found";
+  }
+}
+
+function render(){
+  var parsed = parseHash();
+  var fn = ROUTES[parsed.route] || renderNotFound;
+  app.innerHTML = "";
+  fn(app, parsed.params);
+  updateActiveNav(parsed.route);
+  closeMobileNav();
+  window.scrollTo({top:0, behavior:"auto"});
+
+  /* Virtual pageview: a hash-routed SPA never triggers a real page
+     load on navigation, so GA's automatic page_view tracking won't
+     see these route changes on its own. This pushes one distinct,
+     identifiable "virtual_page_view" per route so it can be wired to
+     a GA4 Page View tag later (with the GA config tag's own automatic
+     page_view left off, so views aren't double-counted). */
+  document.title = pageTitleFor(parsed.route, parsed.params) + " — NextReel";
+  var pagePath = "/" + parsed.route + (parsed.params.length ? "/" + parsed.params.map(encodeURIComponent).join("/") : "");
+  trackEvent("virtual_page_view", {page_path: pagePath, page_title: document.title});
+}
+
+function updateActiveNav(route){
+  document.querySelectorAll('[data-route]').forEach(function(a){
+    if(a.getAttribute('data-route') === route){ a.classList.add('active'); a.setAttribute('aria-current','page'); }
+    else { a.classList.remove('active'); a.removeAttribute('aria-current'); }
+  });
+}
+
+function renderNotFound(container){
+  container.innerHTML =
+    '<div class="wrap section">'+
+      '<div class="empty-state">'+
+        '<h3>Page not found</h3>'+
+        '<p>That page doesn\'t exist. Let\'s get you back to something worth watching.</p>'+
+        '<a class="btn btn-primary" href="#/home">Back to Home</a>'+
+      '</div>'+
+    '</div>';
+}
+
+/* =====================================================================
+   HOME
+===================================================================== */
+function renderHome(container){
+  var trending = MOVIES.filter(function(m){return m.trendRank;}).sort(function(a,b){return a.trendRank-b.trendRank;});
+  var topRated = MOVIES.slice().sort(function(a,b){return b.rating-a.rating;}).slice(0,8);
+  var featured = MOVIES.filter(function(m){return m.featured;})[0] || MOVIES[0];
+  var collagePicks = [MOVIES[1], MOVIES[6], MOVIES[19], MOVIES[2], MOVIES[24]];
+
+  container.innerHTML =
+  '<section class="hero">'+
+    '<div class="wrap hero-grid">'+
+      '<div>'+
+        '<p class="eyebrow">A calmer way to pick a movie</p>'+
+        '<h1>Find What&rsquo;s Worth Watching.</h1>'+
+        '<p class="hero-lede">NextReel is a discovery-first platform: browse by genre, see what&rsquo;s trending, and build a watchlist without wading through everything else first.</p>'+
+        '<form class="search-form" id="heroSearch" role="search" aria-label="Search movies">'+
+          '<label class="visually-hidden" for="heroSearchInput">Search movies by title</label>'+
+          '<input id="heroSearchInput" type="search" placeholder="Search a title, e.g. &ldquo;Interstellar&rdquo;" autocomplete="off">'+
+          '<button class="btn btn-primary" type="submit">Search</button>'+
+        '</form>'+
+        '<div class="hero-meta">'+
+          '<div><strong>'+MOVIES.length+'</strong>titles in the catalogue</div>'+
+          '<div><strong>'+GENRES.length+'</strong>genres to browse</div>'+
+          '<div><strong>Local</strong>watchlist, no account needed</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="poster-collage" aria-hidden="true">'+
+        posterWrap(collagePicks[0], "width:150px;height:225px;top:0;left:20%;transform:rotate(-4deg);z-index:2;")+
+        posterWrap(collagePicks[1], "width:150px;height:225px;top:40px;left:52%;transform:rotate(3deg);z-index:3;")+
+        posterWrap(collagePicks[2], "width:130px;height:195px;top:150px;left:2%;transform:rotate(5deg);z-index:1;")+
+        posterWrap(collagePicks[3], "width:130px;height:195px;top:180px;left:70%;transform:rotate(-6deg);z-index:1;")+
+      '</div>'+
+    '</div>'+
+  '</section>'+
+
+  '<section class="section-tight wrap">'+
+    '<div class="section-head"><h2>This week&rsquo;s editor&rsquo;s pick</h2></div>'+
+    '<div class="featured">'+
+      posterHTML(featured, {showRating:false})+
+      '<div>'+
+        '<span class="featured-tag">Editor&rsquo;s pick</span>'+
+        '<h3>'+escapeHtml(featured.title)+'</h3>'+
+        '<div class="featured-meta">'+
+          '<span class="rating-pill">'+ratingIcon()+featured.rating.toFixed(1)+'</span>'+
+          '<span>'+featured.year+'</span><span>&middot;</span>'+
+          '<span>'+escapeHtml(featured.genres.join(", "))+'</span><span>&middot;</span>'+
+          '<span>'+formatRuntime(featured.runtime)+'</span>'+
+        '</div>'+
+        '<p class="featured-syn">'+escapeHtml(featured.synopsis)+'</p>'+
+        '<div class="featured-actions">'+
+          '<a class="btn btn-primary" href="#/movie/'+featured.id+'">View details</a>'+
+          '<a class="btn btn-outline" href="#/movies">Browse the catalogue</a>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</section>'+
+
+  '<section class="section wrap">'+
+    '<div class="section-head">'+
+      '<div><h2>Trending now</h2><p class="section-sub">The titles getting the most attention on NextReel this week.</p></div>'+
+      '<a class="see-all" href="#/trending">See all trending</a>'+
+    '</div>'+
+    '<div class="rank-row">'+
+      trending.map(function(m){return '<div class="rank-item">'+movieCardHTML(m, {rank:m.trendRank})+'</div>';}).join("")+
+    '</div>'+
+  '</section>'+
+
+  '<hr class="rule wrap">'+
+
+  '<section class="section wrap">'+
+    '<div class="section-head">'+
+      '<div><h2>Top rated</h2><p class="section-sub">The highest-rated titles in the NextReel catalogue.</p></div>'+
+      '<a class="see-all" href="#/top-rated">See all top rated</a>'+
+    '</div>'+
+    '<div class="card-grid">'+ topRated.slice(0,4).map(function(m){return movieCardHTML(m);}).join("") +'</div>'+
+  '</section>'+
+
+  '<section class="section wrap">'+
+    '<div class="section-head">'+
+      '<div><h2>Browse by genre</h2><p class="section-sub">Eight ways into the catalogue, depending on what you&rsquo;re in the mood for.</p></div>'+
+      '<a class="see-all" href="#/genres">All genres</a>'+
+    '</div>'+
+    '<div class="genre-grid">'+
+      GENRES.slice(0,4).map(genreTileHTML).join("")+
+    '</div>'+
+  '</section>'+
+
+  '<section class="cta-band">'+
+    '<div class="wrap">'+
+      '<h2>Not sure where to start?</h2>'+
+      '<p>Jump into the full catalogue and filter by genre, year or rating until something clicks.</p>'+
+      '<a class="btn btn-primary" href="#/movies">Find your next movie</a>'+
+    '</div>'+
+  '</section>';
+
+  document.getElementById("heroSearch").addEventListener("submit", function(e){
+    e.preventDefault();
+    var q = document.getElementById("heroSearchInput").value.trim();
+    if(q){ trackEvent("search", {search_term: q, search_source: "hero"}); }
+    window.location.hash = "#/movies" + (q ? "?q=" + encodeURIComponent(q) : "");
+  });
+}
+function posterWrap(movie, style){
+  return '<div style="position:absolute;'+style+'">'+posterHTML(movie,{showRating:false})+'</div>';
+}
+function genreTileHTML(g){
+  var idx = GENRES.indexOf(g);
+  var pal = PALETTES[idx % PALETTES.length];
+  return '<a class="genre-tile" href="#/genre/'+encodeURIComponent(g)+'" style="--gwash:'+pal[0]+'66">'+
+    '<h3>'+escapeHtml(g)+'</h3><p>'+escapeHtml(GENRE_INFO[g].desc)+'</p></a>';
+}
+
+/* =====================================================================
+   MOVIES (catalogue, search + filters)
+===================================================================== */
+function getHashQuery(){
+  var q = window.location.hash.split("?")[1];
+  if(!q) return {};
+  var out = {};
+  q.split("&").forEach(function(pair){
+    var kv = pair.split("=");
+    out[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]||"");
+  });
+  return out;
+}
+
+function renderMovies(container){
+  var query = getHashQuery();
+  container.innerHTML =
+    '<div class="wrap section">'+
+      '<div class="section-head"><div><h2>Movies</h2><p class="section-sub">Search and filter the full NextReel catalogue.</p></div></div>'+
+      '<form class="filters-bar" id="filterForm">'+
+        '<div class="search-form">'+
+          '<label class="visually-hidden" for="movieSearch">Search movies</label>'+
+          '<input id="movieSearch" type="search" placeholder="Search by title" autocomplete="off" value="'+escapeHtml(query.q||"")+'">'+
+        '</div>'+
+        '<div class="field-select"><label class="visually-hidden" for="genreFilter">Filter by genre</label>'+
+        '<select id="genreFilter"><option value="">All genres</option>'+
+          GENRES.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join("")+
+        '</select></div>'+
+        '<div class="field-select"><label class="visually-hidden" for="sortFilter">Sort</label>'+
+        '<select id="sortFilter">'+
+          '<option value="popularity">Sort: Popularity</option>'+
+          '<option value="rating">Sort: Highest rated</option>'+
+          '<option value="year">Sort: Newest</option>'+
+          '<option value="az">Sort: A&ndash;Z</option>'+
+        '</select></div>'+
+      '</form>'+
+      '<p class="results-count" id="resultsCount" aria-live="polite"></p>'+
+      '<div id="movieResults"></div>'+
+    '</div>';
+
+  var searchInput = document.getElementById("movieSearch");
+  var genreSelect = document.getElementById("genreFilter");
+  var sortSelect = document.getElementById("sortFilter");
+  var resultsEl = document.getElementById("movieResults");
+  var countEl = document.getElementById("resultsCount");
+
+  function applyFilters(){
+    var q = searchInput.value.trim().toLowerCase();
+    var genre = genreSelect.value;
+    var sort = sortSelect.value;
+    var list = MOVIES.filter(function(m){
+      var matchesQ = !q || m.title.toLowerCase().indexOf(q) !== -1;
+      var matchesGenre = !genre || m.genres.indexOf(genre) !== -1;
+      return matchesQ && matchesGenre;
+    });
+    if(sort === "rating") list.sort(function(a,b){return b.rating-a.rating;});
+    else if(sort === "year") list.sort(function(a,b){return b.year-a.year;});
+    else if(sort === "az") list.sort(function(a,b){return a.title.localeCompare(b.title);});
+    else list.sort(function(a,b){return (a.trendRank||99)-(b.trendRank||99);});
+
+    countEl.textContent = list.length + (list.length === 1 ? " title found" : " titles found");
+
+    if(list.length === 0){
+      resultsEl.innerHTML =
+        '<div class="empty-state"><h3>No matches</h3>'+
+        '<p>Try a different title or clear the genre filter to see more results.</p>'+
+        '<button class="btn btn-outline" type="button" id="clearFilters">Clear filters</button></div>';
+      document.getElementById("clearFilters").addEventListener("click", function(){
+        searchInput.value=""; genreSelect.value=""; sortSelect.value="popularity"; applyFilters();
+      });
+    } else {
+      resultsEl.innerHTML = '<div class="card-grid">'+list.map(function(m){return movieCardHTML(m);}).join("")+'</div>';
+    }
+  }
+
+  if(query.genre) genreSelect.value = query.genre;
+  [searchInput, genreSelect, sortSelect].forEach(function(el){
+    el.addEventListener("input", applyFilters);
+    el.addEventListener("change", applyFilters);
+  });
+  document.getElementById("filterForm").addEventListener("submit", function(e){ e.preventDefault(); });
+
+  /* Genre selection via the catalogue filter (as opposed to arriving
+     on a #/genre/ page directly). Only fires for an actual genre
+     pick, not for clearing the filter back to "All genres". */
+  genreSelect.addEventListener("change", function(){
+    if(genreSelect.value){
+      trackEvent("select_genre", {genre: genreSelect.value, source: "movies_filter"});
+    }
+  });
+
+  /* Search, debounced so it fires once the visitor pauses rather than
+     on every keystroke, and only for genuinely new, non-empty terms
+     (skips the value GA already saw via the hero search redirect). */
+  var searchTrackTimer = null;
+  var lastTrackedQuery = (query.q || "").trim().toLowerCase();
+  searchInput.addEventListener("input", function(){
+    window.clearTimeout(searchTrackTimer);
+    searchTrackTimer = window.setTimeout(function(){
+      var q = searchInput.value.trim();
+      var qLower = q.toLowerCase();
+      if(q && qLower !== lastTrackedQuery){
+        trackEvent("search", {search_term: q, search_source: "catalogue"});
+        lastTrackedQuery = qLower;
+      }
+    }, 500);
+  });
+
+  withLoading(resultsEl, function(){ applyFilters(); return resultsEl.innerHTML; }, 180);
+  applyFilters();
+}
+
+/* =====================================================================
+   TRENDING
+===================================================================== */
+function renderTrending(container){
+  var trending = MOVIES.filter(function(m){return m.trendRank;}).sort(function(a,b){return a.trendRank-b.trendRank;});
+  container.innerHTML =
+    '<div class="wrap section">'+
+      '<div class="section-head"><div><h2>Trending now</h2>'+
+      '<p class="section-sub">Ranked by current attention on NextReel. Sample popularity data, refreshed weekly in a live version of the product.</p></div></div>'+
+      '<div id="trendingGrid"></div>'+
+    '</div>';
+  var grid = document.getElementById("trendingGrid");
+  withLoading(grid, function(){
+    return '<div class="card-grid">'+trending.map(function(m){return movieCardHTML(m, {rank:m.trendRank});}).join("")+'</div>';
+  });
+}
+
+/* =====================================================================
+   TOP RATED
+===================================================================== */
+function renderTopRated(container){
+  var topRated = MOVIES.slice().sort(function(a,b){return b.rating-a.rating;});
+  container.innerHTML =
+    '<div class="wrap section">'+
+      '<div class="section-head"><div><h2>Top rated</h2>'+
+      '<p class="section-sub">The highest-rated titles in the catalogue, based on NextReel&rsquo;s sample ratings.</p></div></div>'+
+      '<div id="topRatedGrid"></div>'+
+    '</div>';
+  var grid = document.getElementById("topRatedGrid");
+  withLoading(grid, function(){
+    return '<div class="card-grid">'+topRated.map(function(m){return movieCardHTML(m);}).join("")+'</div>';
+  });
+}
+
+/* =====================================================================
+   GENRES (landing + detail)
+===================================================================== */
+function renderGenres(container){
+  container.innerHTML =
+    '<div class="wrap section">'+
+      '<div class="section-head"><div><h2>Browse by genre</h2><p class="section-sub">Pick a genre to see everything the catalogue has to offer.</p></div></div>'+
+      '<div class="genre-grid">'+ GENRES.map(genreTileHTML).join("") +'</div>'+
+    '</div>';
+}
+
+function renderGenreDetail(container, params){
+  var genre = decodeURIComponent(params[0] || "");
+  var valid = GENRES.indexOf(genre) !== -1;
+  if(!valid){ renderNotFound(container); return; }
+  var list = MOVIES.filter(function(m){return m.genres.indexOf(genre) !== -1;});
+
+  /* Covers genre selection from any entry point that lands here: a
+     genre tile, a genre pill, or a direct/shared link. */
+  trackEvent("select_genre", {genre: genre, source: "genre_page", result_count: list.length});
+
+  container.innerHTML =
+    '<div class="wrap section">'+
+      '<a class="detail-back" href="#/genres">&larr; All genres</a>'+
+      '<div class="section-head"><div><h2>'+escapeHtml(genre)+'</h2>'+
+      '<p class="section-sub">'+escapeHtml(GENRE_INFO[genre].desc)+'</p></div></div>'+
+      '<div class="pill-row">'+
+        GENRES.map(function(g){
+          return '<a class="pill'+(g===genre?' active':'')+'" href="#/genre/'+encodeURIComponent(g)+'">'+escapeHtml(g)+'</a>';
+        }).join("")+
+      '</div>'+
+      '<p class="results-count">'+list.length+(list.length===1?" title":" titles")+' in '+escapeHtml(genre)+'</p>'+
+      '<div id="genreGrid"></div>'+
+    '</div>';
+
+  var grid = document.getElementById("genreGrid");
+  withLoading(grid, function(){
+    if(list.length===0){
+      return '<div class="empty-state"><h3>Nothing here yet</h3><p>This genre doesn&rsquo;t have any titles in the sample catalogue right now.</p></div>';
+    }
+    return '<div class="card-grid">'+list.map(function(m){return movieCardHTML(m);}).join("")+'</div>';
+  }, 160);
+}
+
+/* =====================================================================
+   MOVIE DETAIL
+===================================================================== */
+function renderMovieDetail(container, params){
+  var movie = byId[params[0]];
+  if(!movie){ renderNotFound(container); return; }
+
+  /* Fired once per navigation into this route (not on the watchlist
+     re-paint below), so it counts distinct detail views rather than
+     every internal re-render. */
+  trackEvent("view_movie_detail", {
+    movie_id: movie.id,
+    movie_title: movie.title,
+    movie_genres: movie.genres.join(", "),
+    movie_year: movie.year
+  });
+
+  function paint(){
+    var inWatchlist = isInWatchlist(movie.id);
+    container.innerHTML =
+      '<div class="wrap section">'+
+        '<a class="detail-back" href="#/movies">&larr; Back to browsing</a>'+
+        '<div class="detail-grid">'+
+          posterHTML(movie, {showRating:false})+
+          '<div>'+
+            '<h1 class="detail-title">'+escapeHtml(movie.title)+'</h1>'+
+            '<div class="detail-meta-row">'+
+              '<span class="rating-pill">'+ratingIcon()+movie.rating.toFixed(1)+' / 10</span>'+
+              '<span>'+movie.year+'</span>'+
+              '<span>'+formatRuntime(movie.runtime)+'</span>'+
+            '</div>'+
+            '<div class="detail-tags">'+ movie.genres.map(function(g){return '<a class="tag" href="#/genre/'+encodeURIComponent(g)+'">'+escapeHtml(g)+'</a>';}).join("") +'</div>'+
+            '<p class="detail-syn">'+escapeHtml(movie.synopsis)+'</p>'+
+            '<div class="detail-cast"><h4>Cast</h4><p>'+escapeHtml(movie.cast.join(", "))+'</p></div>'+
+            '<div class="detail-actions">'+
+              '<button class="btn btn-outline" type="button" id="trailerBtn">Watch trailer</button>'+
+              '<button class="btn '+(inWatchlist?'btn-danger-ghost':'btn-primary')+'" type="button" id="watchlistBtn">'+
+                (inWatchlist ? "Remove from watchlist" : "Add to watchlist")+
+              '</button>'+
+            '</div>'+
+            '<p class="demo-note">'+ (movie.real
+              ? "Title, year and cast reflect the real film. Synopsis and rating are original sample content written for this demo, not sourced from any review platform."
+              : "This is a fictional sample title created for this demo &mdash; it does not represent a real film.")+
+            '</p>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+
+    document.getElementById("watchlistBtn").addEventListener("click", function(){
+      toggleWatchlist(movie.id);
+      paint();
+    });
+    document.getElementById("trailerBtn").addEventListener("click", function(){
+      trackEvent("trailer_click", {movie_id: movie.id, movie_title: movie.title});
+      openModal(
+        "Trailer preview",
+        "Trailer playback isn&rsquo;t wired up in this prototype. In a production build, this button would open the trailer player for &ldquo;"+escapeHtml(movie.title)+"&rdquo;."
+      );
+    });
+  }
+  paint();
+}
+
+/* =====================================================================
+   WATCHLIST
+===================================================================== */
+function renderWatchlist(container){
+  function paint(){
+    var ids = getWatchlist();
+    var list = ids.map(function(id){return byId[id];}).filter(Boolean);
+    container.innerHTML =
+      '<div class="wrap section">'+
+        '<div class="watchlist-head"><div><h2>Your watchlist</h2>'+
+        '<p class="section-sub">Saved locally in this browser &mdash; nothing is sent to a server.</p></div></div>'+
+        '<div id="watchlistGrid"></div>'+
+      '</div>';
+    var grid = document.getElementById("watchlistGrid");
+    if(list.length === 0){
+      grid.innerHTML =
+        '<div class="empty-state"><h3>Your watchlist is empty</h3>'+
+        '<p>Add movies from any detail page and they&rsquo;ll show up here.</p>'+
+        '<a class="btn btn-primary" href="#/movies">Browse movies</a></div>';
+      return;
+    }
+    grid.innerHTML = '<div class="card-grid">'+list.map(function(m){
+      return '<div class="movie-card">'+
+        '<a class="card-link" href="#/movie/'+m.id+'">'+posterHTML(m)+
+          '<div><div class="movie-card-title">'+escapeHtml(m.title)+'</div>'+
+          '<div class="movie-card-meta"><span>'+m.year+'</span><span>&middot;</span><span>'+escapeHtml(m.genres[0])+'</span></div></div>'+
+        '</a>'+
+        '<button class="watchlist-remove" type="button" data-remove="'+m.id+'">Remove from watchlist</button>'+
+      '</div>';
+    }).join("")+'</div>';
+
+    grid.querySelectorAll('[data-remove]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        toggleWatchlist(btn.getAttribute("data-remove"));
+        paint();
+      });
+    });
+  }
+  paint();
+}
+
+/* =====================================================================
+   CONTACT / RECOMMEND
+===================================================================== */
+function renderContact(container){
+  container.innerHTML =
+    '<div class="wrap section">'+
+      '<div class="section-head"><div><h2>Recommend a movie</h2>'+
+      '<p class="section-sub">Think we&rsquo;re missing something worth watching? Tell us about it.</p></div></div>'+
+      '<div class="form-card" id="formCard">'+
+        '<form id="recommendForm" novalidate>'+
+          '<div class="field" id="field-name">'+
+            '<label for="f-name">Your name</label>'+
+            '<input id="f-name" name="name" type="text" autocomplete="name">'+
+            '<p class="field-error">Please enter your name.</p>'+
+          '</div>'+
+          '<div class="field" id="field-email">'+
+            '<label for="f-email">Email address</label>'+
+            '<input id="f-email" name="email" type="email" autocomplete="email">'+
+            '<p class="field-error">Please enter a valid email address.</p>'+
+          '</div>'+
+          '<div class="field" id="field-movie">'+
+            '<label for="f-movie">Movie you&rsquo;re recommending</label>'+
+            '<input id="f-movie" name="movie" type="text">'+
+            '<p class="field-error">Please enter a movie title.</p>'+
+          '</div>'+
+          '<div class="field" id="field-message">'+
+            '<label for="f-message">Message <span class="optional">(optional)</span></label>'+
+            '<textarea id="f-message" name="message"></textarea>'+
+          '</div>'+
+          '<button class="btn btn-primary btn-block" type="submit">Submit recommendation</button>'+
+        '</form>'+
+      '</div>'+
+    '</div>';
+
+  var form = document.getElementById("recommendForm");
+  var formCard = document.getElementById("formCard");
+
+  function setInvalid(fieldId, invalid){
+    document.getElementById(fieldId).classList.toggle("invalid", invalid);
+  }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var name = form.name.value.trim();
+    var email = form.email.value.trim();
+    var movie = form.movie.value.trim();
+    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    setInvalid("field-name", !name);
+    setInvalid("field-email", !emailOk);
+    setInvalid("field-movie", !movie);
+
+    if(!name || !emailOk || !movie) return;
+
+    /* No name/email in the event: GA4 must never receive personal
+       data, so only the non-identifying part (the recommended title,
+       and whether an optional message was included) is sent. */
+    trackEvent("submit_recommendation", {
+      movie_title: movie,
+      has_message: form.message.value.trim().length > 0
+    });
+
+    formCard.innerHTML =
+      '<div class="form-success">'+
+        '<h3>Thanks, '+escapeHtml(name.split(" ")[0])+'.</h3>'+
+        '<p>Your recommendation for &ldquo;'+escapeHtml(movie)+'&rdquo; has been noted. This is a front-end demo, so nothing was sent or stored anywhere.</p>'+
+        '<button class="btn btn-outline" type="button" id="sendAnother">Send another recommendation</button>'+
+      '</div>';
+    document.getElementById("sendAnother").addEventListener("click", function(){ renderContact(app); });
+  });
+}
+
+/* =====================================================================
+   MODAL
+===================================================================== */
+var modalRoot = document.getElementById("modalRoot");
+var lastFocused = null;
+
+function openModal(title, bodyHtml){
+  lastFocused = document.activeElement;
+  modalRoot.innerHTML =
+    '<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">'+
+      '<div class="modal-box">'+
+        '<h3 id="modalTitle">'+escapeHtml(title)+'</h3>'+
+        '<p>'+bodyHtml+'</p>'+
+        '<button class="btn btn-primary" type="button" id="modalClose">Got it</button>'+
+      '</div>'+
+    '</div>';
+  var closeBtn = document.getElementById("modalClose");
+  closeBtn.focus();
+  function close(){
+    modalRoot.innerHTML = "";
+    document.removeEventListener("keydown", onKey);
+    if(lastFocused) lastFocused.focus();
+  }
+  function onKey(e){ if(e.key === "Escape") close(); }
+  closeBtn.addEventListener("click", close);
+  document.getElementById("modalOverlay").addEventListener("click", function(e){
+    if(e.target.id === "modalOverlay") close();
+  });
+  document.addEventListener("keydown", onKey);
+}
+
+/* =====================================================================
+   MOBILE NAV
+===================================================================== */
+var navToggle = document.getElementById("navToggle");
+var mobilePanel = document.getElementById("mobilePanel");
+navToggle.addEventListener("click", function(){
+  var open = mobilePanel.classList.toggle("open");
+  navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+});
+function closeMobileNav(){
+  mobilePanel.classList.remove("open");
+  navToggle.setAttribute("aria-expanded","false");
+}
+
+/* =====================================================================
+   INIT
+===================================================================== */
+window.addEventListener("hashchange", render);
+window.addEventListener("DOMContentLoaded", function(){
+  if(!window.location.hash) window.location.hash = "#/home";
+  updateNavBadge();
+  render();
+});
+if(document.readyState !== "loading"){
+  if(!window.location.hash) window.location.hash = "#/home";
+  updateNavBadge();
+  render();
+}
+
+})();
+</script>
+</body>
+</html>
